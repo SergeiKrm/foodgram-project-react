@@ -17,7 +17,7 @@ def user(request):
     return HttpResponse('Страница пользователя')
 
 
-def subscribtions(request):
+def subscriptions(request):
     return HttpResponse('Страница подписок')
 
 
