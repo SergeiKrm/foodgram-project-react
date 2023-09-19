@@ -40,6 +40,10 @@ class Ingredient(models.Model):   # добавить поле Количеств
         max_length=200,
         verbose_name='Ингредиент',
         )
+    amount = models.IntegerField(
+        verbose_name='Количество',
+        default=1,
+        )
     measurement_unit = models.CharField(
         max_length=200,
         verbose_name='Единица измерения',
@@ -73,7 +77,7 @@ class Recipe(models.Model):
     cooking_time = models.IntegerField(
         validators=[MinValueValidator(1)],
         verbose_name='Время приготовления в мин',
-        )
+        ) # добавить поле с числом добавлений рецепта в избранное
 
     class Meta:
         # ordering = ('name',)
