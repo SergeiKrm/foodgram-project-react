@@ -6,7 +6,7 @@ from .models import Recipe, Tag, Ingredient
 
 class RecipeAdmin(admin.ModelAdmin):
     # Перечисляем поля, которые должны отображаться в админке
-    list_display = ('author', 'name',)
+    list_display = ('author', 'name', )
     # Добавляем интерфейс для поиска
     search_fields = ('author', 'name', 'tags')
     # Добавляем возможность фильтрации

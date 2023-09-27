@@ -18,7 +18,7 @@ class Tag(models.Model):
         verbose_name='Цвет в HEX',
         null=True,
         unique=True,
-        )   # Цветовой код, например, #49B64E.
+        )
 
     slug = models.SlugField(
         max_length=200,
@@ -70,17 +70,14 @@ class Recipe(models.Model):
         )
     # image - required string <binary> Картинка, закодированная в Base64
     text = models.TextField(verbose_name='Описание',)
-    ingredients = models.ForeignKey(Ingredient, verbose_name='Список ингредиентов', on_delete=models.CASCADE)
-      # с выбором из предустановленного списка
-      # и с указанием количества и единицы измерения.
-    tags = models.ForeignKey(Tag, on_delete=models.CASCADE, verbose_name='Список id тегов',) #1toMany
+    # ingredients = models.ManyToManyField(Ingredient, through='IngredientRecipe', verbose_name='Список ингредиентов',)
+    tags = models.ManyToManyField(Tag, through='TagRecipe', related_name='recipes',)
     cooking_time = models.IntegerField(
         validators=[MinValueValidator(1)],
         verbose_name='Время приготовления в мин',
-        ) # добавить поле с числом добавлений рецепта в избранное
+        )                                                           # добавить поле с числом добавлений рецепта в избранное
 
-    class Meta:
-        # ordering = ('name',)
+    class Meta:                                                 # ordering = ('name',)
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
 
@@ -88,3 +85,17 @@ class Recipe(models.Model):
         return self.name
 
 
+class IngredientRecipe(models.Model):
+    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.ingredient} {self.recipe}'
+
+
+class TagRecipe(models.Model):
+    tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.tag} {self.recipe}'

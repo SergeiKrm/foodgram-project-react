@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 
 
 from foodgram.models import Ingredient, Recipe, Tag
-from .serializers import IngredientSerializer, RecipeSerializer, TagSerializer
+from .serializers import IngredientSerializer, RecipeSerializer, TagSerializer, RecipePostSerializer
 
 
 
@@ -26,6 +26,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
 
+    def get_serializer_class(self):
+        # Если запрошенное действие (action) — получение списка объектов ('list')
+        if self.action == 'list' or self.action == 'retrieve':
+            # ...то применяем CatListSerializer
+            return RecipeSerializer
+        # А если запрошенное действие — не 'list', применяем CatSerializer
+        return RecipePostSerializer 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
