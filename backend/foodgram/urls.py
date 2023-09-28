@@ -5,7 +5,7 @@ from . import views
 
 urlpatterns = [
     # Главная страница
-    path('', views.index),
+    # path('', views.index),
 
     path('recipe/<int:pk>', views.recipe),
     path('user/<int:pk>', views.user),
@@ -16,5 +16,6 @@ urlpatterns = [
 
 
     path('api/', include('api.urls')),
+
 
 ]

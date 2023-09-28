@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from djoser.serializers import UserCreateSerializer, ActivationSerializer
 from rest_framework import serializers
 
 from foodgram.models import Ingredient, Recipe, Tag, TagRecipe
@@ -78,3 +79,13 @@ class RecipePostSerializer(serializers.ModelField):
             current_tag = Tag.objects.get(**tag)
             TagRecipe.objects.create(tag=current_tag, recipe=recipe)
         return recipe
+
+
+class CustomUserCreateSerializer(UserCreateSerializer):
+    email = serializers.EmailField(allow_blank=False)
+    first_name = serializers.CharField(max_length=150, allow_blank=False)
+    last_name = serializers.CharField(max_length=150, allow_blank=False)
+
+    class Meta:
+        model = User
+        fields = ('email', 'id', 'username', 'first_name', 'last_name', 'password',)
