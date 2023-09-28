@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework.authtoken',   # !!
     'djoser',
 ]
 
@@ -129,26 +130,30 @@ STATIC_URL = '/static/'
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',  #   
+        'rest_framework.permissions.IsAuthenticated',
     ],
 
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+       # 'rest_framework_simplejwt.authentication.JWTAuthentication',  # тут поменял обратно на ТокенАут 
+       'rest_framework.authentication.TokenAuthentication',
     ],
 }
 
-
+'''
 SIMPLE_JWT = {
-   'ACCESS_TOKEN_LIFETIME': timedelta(days=50),
+   'ACCESS_TOKEN_LIFETIME': timedelta(days=50),   # не использую
    'AUTH_HEADER_TYPES': ('Bearer',),
 } 
-
+'''
 DJOSER = {
     #'PASSWORD_RESET_CONFIRM_URL': '#/password/reset/confirm/{uid}/{token}',
     #'USERNAME_RESET_CONFIRM_URL': '#/username/reset/confirm/{uid}/{token}',
     #'ACTIVATION_URL': '#/activate/{uid}/{token}',
     #'SEND_ACTIVATION_EMAIL': True,
+    'LOGIN_FIELD': 'email',
+    'HIDE_USERS': False,
     'SERIALIZERS': {
         'user_create': 'api.serializers.CustomUserCreateSerializer',
     },
 }
+
