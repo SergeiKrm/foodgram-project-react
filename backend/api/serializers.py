@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-from djoser.serializers import UserCreateSerializer, TokenCreateSerializer
+from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
 
 from foodgram.models import Ingredient, Recipe, Tag, TagRecipe
@@ -101,12 +101,11 @@ class CustomUserCreateSerializer(UserCreateSerializer):
         user.set_password(validated_data['password'])
         user.save()
         return user'''
-    
-'''
-class CustomTokenCreateSerializer(TokenCreateSerializer):
-    email = serializers.EmailField(allow_blank=False)
-    username = serializers.CharField(allow_blank=True)
+
+
+class CustomerUserSerializer(UserSerializer):
+    is_subscribed = serializers.BooleanField(default=False)    # функционал is_subscribed не сделан еще!
 
     class Meta:
         model = User
-        fields = ('email', 'password')'''
+        fields = ('email', 'id', 'username', 'first_name', 'last_name', 'is_subscribed', )
