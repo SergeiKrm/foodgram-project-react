@@ -34,7 +34,6 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'users.apps.UsersConfig',
     'foodgram.apps.FoodgramConfig',
     'api.apps.ApiConfig',
     'django.contrib.admin',
@@ -134,17 +133,10 @@ REST_FRAMEWORK = {
     ],
 
     'DEFAULT_AUTHENTICATION_CLASSES': [
-       # 'rest_framework_simplejwt.authentication.JWTAuthentication',  # тут поменял обратно на ТокенАут 
        'rest_framework.authentication.TokenAuthentication',
     ],
 }
 
-'''
-SIMPLE_JWT = {
-   'ACCESS_TOKEN_LIFETIME': timedelta(days=50),   # не использую
-   'AUTH_HEADER_TYPES': ('Bearer',),
-} 
-'''
 DJOSER = {
     #'PASSWORD_RESET_CONFIRM_URL': '#/password/reset/confirm/{uid}/{token}',
     #'USERNAME_RESET_CONFIRM_URL': '#/username/reset/confirm/{uid}/{token}',
@@ -157,4 +149,7 @@ DJOSER = {
         'user': 'api.serializers.CustomerUserSerializer',
         'current_user': 'api.serializers.CustomerUserSerializer',
     },
+    'PERMISSIONS': {
+        'user_list': ['rest_framework.permissions.AllowAny'],
+    }
 }

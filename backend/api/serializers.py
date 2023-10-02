@@ -4,26 +4,33 @@ from rest_framework import serializers
 
 from foodgram.models import Ingredient, Recipe, Tag, TagRecipe
 
+
 import webcolors
 
 
 class Name2HexColor(serializers.Field):
     def to_representation(self, value):
-        try:
-            value = webcolors.name_to_hex(value)
-        except ValueError:
-            raise serializers.ValidationError(
-                f'Введите вместо {value} название цвета из палитры Basic Colors')
         return value
     
     def to_internal_value(self, data):
+        if data[0] == '#':
+            return data
         try:
             data = webcolors.name_to_hex(data)
         except ValueError:
             raise serializers.ValidationError(
-                f'Введите вместо {data} название цвета из палитры Basic Colors')
+                'Введите название цвета из палитры "Basic Colors" https://www.w3.org/wiki/CSS/Properties/color/keywords'
+                ' или укажите цветовой код в hex-формате (например, #49B64E)'
+                )
         return data
 
+
+class CustomerUserSerializer(UserSerializer):
+    is_subscribed = serializers.BooleanField(default=False)    # функционал is_subscribed не сделан еще!
+
+    class Meta:
+        model = User
+        fields = ('email', 'id', 'username', 'first_name', 'last_name', 'is_subscribed', )
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -33,7 +40,7 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 
 class TagSerializer(serializers.ModelSerializer):
-    # color = Name2HexColor()
+    color = Name2HexColor()
     
     class Meta:
         model = Tag
@@ -42,42 +49,28 @@ class TagSerializer(serializers.ModelSerializer):
 
 class RecipeSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True, )
-    
+    author = CustomerUserSerializer(read_only=True)
+        
     class Meta:
         model = Recipe
         fields = ('id', 'tags', 'author', 'name', 'text', 'cooking_time')   # 'ingredients',
 
-    '''
-    def create(self, validated_data):
-        # Уберем список tags из словаря validated_data и сохраним его
-        tags = validated_data.pop('tags')
-
-        # Создадим новый рецепт пока без тегов, данных нам достаточно
-        recipe = Recipe.objects.create(**validated_data)
-
-        for tag in tags:
-            # Создадим новую запись или получим существующий экземпляр из БД
-            current_tag, status = Tag.objects.get(**tag)   # **tag
-            # Поместим ссылку на каждый тег во вспомогательную таблицу, указав к какому рецепту он относится
-            TagRecipe.objects.create(
-                tag=current_tag, recipe=recipe)
-        return recipe
-        '''
-
-class RecipePostSerializer(serializers.ModelField):
+    
+class RecipePostSerializer(serializers.ModelSerializer):
     tags = serializers.PrimaryKeyRelatedField(many=True, queryset=Tag.objects.all())
+    author = CustomerUserSerializer(read_only=True)
 
     class Meta:
         model = Recipe
-        fields = ('tags', 'name', 'text', 'cooking_time')
+        fields = ('id', 'tags', 'author', 'name', 'text', 'cooking_time')
     
     def create(self, validated_data):
         tags = validated_data.pop('tags')
         recipe = Recipe.objects.create(**validated_data)
 
         for tag in tags:
-            current_tag = Tag.objects.get(**tag)
-            TagRecipe.objects.create(tag=current_tag, recipe=recipe)
+            tag = Tag.objects.get(id=tag.id)
+            TagRecipe.objects.create(tag=tag, recipe=recipe)
         return recipe
 
 
@@ -90,22 +83,3 @@ class CustomUserCreateSerializer(UserCreateSerializer):
         model = User
         fields = ('email', 'id', 'username', 'first_name', 'last_name', 'password',)
 
-    '''
-    def create(self, validated_data):
-        user = User(
-            email=validated_data['email'],
-            username=validated_data['username'],
-            first_name=validated_data['first_name'],
-            last_name=validated_data['last_name']
-        )
-        user.set_password(validated_data['password'])
-        user.save()
-        return user'''
-
-
-class CustomerUserSerializer(UserSerializer):
-    is_subscribed = serializers.BooleanField(default=False)    # функционал is_subscribed не сделан еще!
-
-    class Meta:
-        model = User
-        fields = ('email', 'id', 'username', 'first_name', 'last_name', 'is_subscribed', )

@@ -14,15 +14,8 @@ from .serializers import IngredientSerializer, RecipeSerializer, TagSerializer, 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-'''
-class RecipeList(generics.ListCreateAPIView):
-    queryset = Recipe.objects.all()
-    serializer_class = RecipeSerializer
 
-class RecipeDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Recipe.objects.all()
-    serializer_class = RecipeSerializer
-'''
+
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
@@ -30,10 +23,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         # Если запрошенное действие (action) — получение списка объектов ('list')
         if self.action == 'list' or self.action == 'retrieve':
-            # ...то применяем CatListSerializer
+            # ...то применяем 
             return RecipeSerializer
-        # А если запрошенное действие — не 'list', применяем CatSerializer
+        # А если запрошенное действие — не 'list', применяем 
         return RecipePostSerializer 
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user) 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
