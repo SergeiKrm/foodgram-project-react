@@ -65,7 +65,6 @@ class IngredientSerializer(serializers.ModelSerializer):
 class AddIngredientSerializer(serializers.ModelSerializer):
     # id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())  # !! source
     id = serializers.IntegerField(source='ingredient.id')
-
     amount = serializers.IntegerField(min_value=1)
     name = serializers.ReadOnlyField(source='ingredient.name')
     measurement_unit = serializers.ReadOnlyField(source='ingredient.measurement_unit')
@@ -76,13 +75,13 @@ class AddIngredientSerializer(serializers.ModelSerializer):
 
 
 class AddTagSerializer(serializers.ModelSerializer):
-    id = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all())
+    # id = serializers.IntegerField(source='tag.id')
     name = serializers.ReadOnlyField(source='tag.name')
     color = serializers.ReadOnlyField(source='tag.color')
     slug = serializers.ReadOnlyField(source='tag.slug')
 
     class Meta:
-        model = IngredientRecipe
+        model = TagRecipe
         fields = ('id', 'name', 'color', 'slug')
 
 
@@ -112,6 +111,19 @@ class RecipePostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = ('id', 'tags', 'author', 'ingredients', 'name', 'text', 'cooking_time')
+
+    def to_representation(self, instance):
+        recipe = super().to_representation(instance)
+        tags = recipe['tags']
+        recipe['tags'] = []
+        for tag in tags:
+            tag = Tag.objects.get(id=tag)
+            recipe['tags'].append({
+                'id': tag.id,
+                'name': tag.name,
+                'color': tag.color,
+                'slug': tag.slug})
+        return recipe
 
     def create(self, validated_data):
         tags = validated_data.pop('tags')
