@@ -106,7 +106,7 @@ class IngredientRecipe(models.Model):
 
 class TagRecipe(models.Model):
     tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name='tag_recipes')  #related_name='tag_recipes'
 
     def __str__(self):
         return f'{self.tag} {self.recipe}'
