@@ -1,10 +1,9 @@
 from django.db import models
 from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
+
 
 User = get_user_model()
-
-
 
 
 class Tag(models.Model):
@@ -35,14 +34,10 @@ class Tag(models.Model):
         return self.name
 
 
-class Ingredient(models.Model):   # добавить поле Количество
+class Ingredient(models.Model):
     name = models.CharField(
         max_length=200,
         verbose_name='Ингредиент',
-        )
-    amount = models.IntegerField(
-        verbose_name='Количество',
-        default=1,
         )
     measurement_unit = models.CharField(
         max_length=200,
@@ -70,8 +65,17 @@ class Recipe(models.Model):
         )
     # image - required string <binary> Картинка, закодированная в Base64
     text = models.TextField(verbose_name='Описание',)
-    # ingredients = models.ManyToManyField(Ingredient, through='IngredientRecipe', verbose_name='Список ингредиентов',)
-    tags = models.ManyToManyField(Tag, through='TagRecipe', related_name='recipes',)
+    ingredients = models.ManyToManyField(
+        Ingredient,
+        through='IngredientRecipe',
+        verbose_name='Список ингредиентов',
+        related_name='recipes'
+        )
+    tags = models.ManyToManyField(
+        Tag,
+        through='TagRecipe',
+        related_name='recipes',
+        )
     cooking_time = models.IntegerField(
         validators=[MinValueValidator(1)],
         verbose_name='Время приготовления в мин',
@@ -87,7 +91,14 @@ class Recipe(models.Model):
 
 class IngredientRecipe(models.Model):
     ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name='ingredient_recipes'
+        )
+    amount = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1)],
+        )
 
     def __str__(self):
         return f'{self.ingredient} {self.recipe}'

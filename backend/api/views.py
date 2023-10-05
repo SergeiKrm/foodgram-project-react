@@ -22,7 +22,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         # Если запрошенное действие (action) — получение списка объектов ('list')
-        if self.action == 'list' or self.action == 'retrieve':
+        if self.action in ('list', 'retrieve',):
             # ...то применяем 
             return RecipeSerializer
         # А если запрошенное действие — не 'list', применяем 

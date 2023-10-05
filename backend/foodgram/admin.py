@@ -1,10 +1,15 @@
 from django.contrib import admin
 
-from .models import Recipe, Tag, Ingredient, TagRecipe
+from .models import Recipe, Tag, Ingredient, TagRecipe, IngredientRecipe
 
 
 class TagRecipeInline(admin.TabularInline):
     model = TagRecipe
+    extra = 1
+
+
+class IngredientRecipeInline(admin.TabularInline):
+    model = IngredientRecipe
     extra = 1
 
 
@@ -15,15 +20,19 @@ class RecipeAdmin(admin.ModelAdmin):
     search_fields = ('author', 'name', 'tags')
     # Добавляем возможность фильтрации
     list_filter = ('author', 'name', 'tags',)
-    inlines = (TagRecipeInline,)  # для отображения тегов М2М
+    inlines = (TagRecipeInline, IngredientRecipeInline)  # для отображения тегов М2М
 
 
 class TagRecipeAdmin(admin.ModelAdmin):
     inlines = (TagRecipeInline,)
 
 
+class IngredientRecipeAdmin(admin.ModelAdmin):
+    inlines = (TagRecipeInline, IngredientRecipeInline)
+
+
 class IngredientAdmin(admin.ModelAdmin):
-    list_display = ('name', 'amount',)
+    list_display = ('name', )
     list_filter = ('name',)
 
 

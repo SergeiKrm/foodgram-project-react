@@ -1,25 +1,11 @@
-import webcolors
-
-a = 'blue'
-#a = '#0000ff'
-
-if a[0] == '#':
-    name = a
-
-name = webcolors.name_to_hex('blue')
+from collections import OrderedDict
+d = OrderedDict([('id', 1), ('amount', 10)])
 
 
-# print(hex)
-print(name)
-
-'''
-class Name2HexColor(serializers.Field):
-        
-    def to_internal_value(self, data):
-        
-        try:
-            data = webcolors.name_to_hex(data)
-        except ValueError:
-            raise serializers.ValidationError(
-                f'Введите вместо {data} название цвета из палитры Basic Colors')
-        return data'''
+#d = OrderedDict([('Италия', 14), ('Аргентина', 6), ('Бразилия', 2), ('Чехия', 1)])
+print(d)
+#print((d.items()))
+print(list(d.items()))
+print(list(d.items())[0][1])
+print(list(d.items())[1][0])
+# Вывод: [('Италия', 14), ('Аргентина', 6), ('Бразилия', 2), ('Чехия', 1)]
