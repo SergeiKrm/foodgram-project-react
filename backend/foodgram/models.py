@@ -110,3 +110,27 @@ class TagRecipe(models.Model):
 
     def __str__(self):
         return f'{self.tag} {self.recipe}'
+    
+
+class Follow(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='follower',
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='following',
+    )
+    '''
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'following'],
+                name='unique_user_following'
+            )
+        ]'''
+    
+    def __str__(self):
+        return f'{self.user} {self.author}'

@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
 
-from foodgram.models import Ingredient, Recipe, Tag, TagRecipe, IngredientRecipe
+from foodgram.models import Follow, Ingredient, Recipe, Tag, TagRecipe, IngredientRecipe
 
 
 import webcolors
@@ -48,11 +48,18 @@ class IngredientAmountPostSerializer(serializers.ModelSerializer):
 
 
 class CustomerUserSerializer(UserSerializer):
-    is_subscribed = serializers.BooleanField(default=False)    # функционал is_subscribed не сделан еще!
+    is_subscribed = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = User
         fields = ('email', 'id', 'username', 'first_name', 'last_name', 'is_subscribed', )
+
+    def get_is_subscribed(self, obj):
+        # print('!!!obj', obj, type(obj))
+        # print('!!!user', self.context.get('request').user.id)
+        user = self.context.get('request').user.id
+        return Follow.objects.filter(user=user, author=obj.id).exists()
+
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -73,7 +80,7 @@ class AddIngredientSerializer(serializers.ModelSerializer):
         model = IngredientRecipe
         fields = ('id', 'name', 'measurement_unit', 'amount')
 
-
+'''
 class AddTagSerializer(serializers.ModelSerializer):
     # id = serializers.IntegerField(source='tag.id')
     name = serializers.ReadOnlyField(source='tag.name')
@@ -82,7 +89,7 @@ class AddTagSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TagRecipe
-        fields = ('id', 'name', 'color', 'slug')
+        fields = ('id', 'name', 'color', 'slug')'''
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -157,3 +164,52 @@ class CustomUserCreateSerializer(UserCreateSerializer):
     class Meta:
         model = User
         fields = ('email', 'id', 'username', 'first_name', 'last_name', 'password',)
+
+
+class RecipeFollowSerializer(serializers.ModelSerializer):
+    #tags = TagSerializer(many=True, read_only=True,)
+    #author = CustomerUserSerializer(read_only=True)
+    #ingredients = IngredientAmountSerializer(many=True, read_only=True, source='ingredient_recipes')
+
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'cooking_time')   # 'image' потом картинку вставить!
+
+
+class FollowSerializer(serializers.ModelSerializer):
+    email = serializers.ReadOnlyField(source='author.email')
+    id = serializers.ReadOnlyField(source='author.id')
+    username = serializers.ReadOnlyField(source='author.username')
+    first_name = serializers.ReadOnlyField(source='author.first_name')
+    last_name = serializers.ReadOnlyField(source='author.last_name')
+    is_subscribed = serializers.SerializerMethodField(read_only=True)
+    recipes = RecipeFollowSerializer(many=True, read_only=True, source='author.recipes')
+    
+
+    class Meta:
+        model = Follow
+        fields = ('email', 'id', 'username', 'first_name', 'last_name', 'is_subscribed', 'recipes')
+
+    def get_is_subscribed(self, obj):
+        return Follow.objects.filter(user=obj.user.id, author=obj.author.id).exists()
+
+         
+
+
+    '''
+    def create(self, validated_data):
+
+        Follow.objects.get(tag=tag, recipe=recipe)
+            tag = Tag.objects.get(id=tag.id)
+            TagRecipe.objects.create
+        
+        for ingredient in ingredients:
+            ingredient_id = ingredient['ingredient']['id']
+            amount = ingredient['amount']
+            ingredient = Ingredient.objects.get(id=ingredient_id)
+            IngredientRecipe.objects.create(
+                ingredient=ingredient,
+                recipe=recipe,
+                amount=amount
+                )
+        return recipe'''
