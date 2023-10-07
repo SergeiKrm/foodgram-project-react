@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from djoser.views import UserViewSet
 from rest_framework import generics, status, viewsets
 from rest_framework.decorators import api_view
@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 
 
 from foodgram.models import Follow, Ingredient, Recipe, Tag
-from .serializers import FollowSerializer, IngredientSerializer, RecipeSerializer, TagSerializer, RecipePostSerializer
+from .serializers import FollowSerializer, FollowPostSerializer, IngredientSerializer, RecipeSerializer, TagSerializer, RecipePostSerializer
 
 
 User = get_user_model()
@@ -45,41 +45,32 @@ class APIFollow(APIView):
         subscriptions = Follow.objects.filter(user=user)
         serializer = FollowSerializer(subscriptions, many=True)
         return Response(serializer.data)
-'''
-    def post(self, request):
-        serializer = CatSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED) 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-'''
-class APIPostDetail(APIView):
-    def get(self, request, pk):
-        post = Post.objects.get(pk=pk)
-        serializer = PostSerializer(post)
-        return Response(serializer.data)
     
-    def put(self, request, pk):
-        post = Post.objects.get(pk=pk)
-        serializer = PostSerializer(post, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    def patch(self, request, pk):
-        post = Post.objects.get(pk=pk)
-        serializer = PostSerializer(post, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    def delete(self, request, pk):
-        post = Post.objects.get(pk=pk)
-        post.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
+class APIFollowDetail(APIView):  # пока можно создать дубликат
+    def post(self, request, id):
+        author = get_object_or_404(User, id=self.kwargs.get('id'))
+        new_subscription = Follow.objects.create(
+            user=self.request.user,
+            author=author
+            )
+
+        serializer = FollowSerializer(new_subscription, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    
+    def delete(self, request, id):
+        subscription = get_object_or_404(
+            Follow,
+            user=self.request.user.id,
+            author=self.kwargs.get('id')
+            )
+        subscription.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+        
 
 '''
 class FollowViewSet(viewsets.ModelViewSet):

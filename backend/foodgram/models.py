@@ -79,9 +79,9 @@ class Recipe(models.Model):
     cooking_time = models.IntegerField(
         validators=[MinValueValidator(1)],
         verbose_name='Время приготовления в мин',
-        )                                                           # добавить поле с числом добавлений рецепта в избранное
+        )               # добавить поле с числом добавлений рецепта в избранное
 
-    class Meta:                                                 # ordering = ('name',)
+    class Meta:             # ordering = ('name',)
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
 
@@ -106,11 +106,15 @@ class IngredientRecipe(models.Model):
 
 class TagRecipe(models.Model):
     tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name='tag_recipes')  #related_name='tag_recipes'
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name='tag_recipes'
+        )
 
     def __str__(self):
         return f'{self.tag} {self.recipe}'
-    
+
 
 class Follow(models.Model):
     user = models.ForeignKey(
@@ -131,6 +135,24 @@ class Follow(models.Model):
                 name='unique_user_following'
             )
         ]'''
-    
+
     def __str__(self):
         return f'{self.user} {self.author}'
+
+
+class Favorites(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='favorites',
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name='favorited',
+    )
+    class Meta:             # ordering = ('name',)
+        verbose_name = 'Избранное'
+
+    def __str__(self):
+        return f'{self.user} {self.recipe}'

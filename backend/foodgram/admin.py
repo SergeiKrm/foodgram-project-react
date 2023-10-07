@@ -37,7 +37,7 @@ class IngredientAdmin(admin.ModelAdmin):
 
 
 class FollowAdmin(admin.ModelAdmin):
-    list_display = ('user', 'author')
+    list_display = ('id', 'user', 'author')
     #list_filter = ('name',)
 
 

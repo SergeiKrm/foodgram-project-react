@@ -167,9 +167,6 @@ class CustomUserCreateSerializer(UserCreateSerializer):
 
 
 class RecipeFollowSerializer(serializers.ModelSerializer):
-    #tags = TagSerializer(many=True, read_only=True,)
-    #author = CustomerUserSerializer(read_only=True)
-    #ingredients = IngredientAmountSerializer(many=True, read_only=True, source='ingredient_recipes')
 
     class Meta:
         model = Recipe
@@ -184,32 +181,38 @@ class FollowSerializer(serializers.ModelSerializer):
     last_name = serializers.ReadOnlyField(source='author.last_name')
     is_subscribed = serializers.SerializerMethodField(read_only=True)
     recipes = RecipeFollowSerializer(many=True, read_only=True, source='author.recipes')
-    
+    recipes_count = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Follow
-        fields = ('email', 'id', 'username', 'first_name', 'last_name', 'is_subscribed', 'recipes')
+        fields = ('email', 'id', 'username', 'first_name', 'last_name',
+                  'is_subscribed', 'recipes', 'recipes_count')
 
     def get_is_subscribed(self, obj):
         return Follow.objects.filter(user=obj.user.id, author=obj.author.id).exists()
 
+    def get_recipes_count(self, obj):
+        return Recipe.objects.filter(author=obj.author.id).count()
          
 
+class FollowPostSerializer(serializers.ModelSerializer):
+    email = serializers.ReadOnlyField(source='author.email')
+    id = serializers.ReadOnlyField(source='author.id')
+    username = serializers.ReadOnlyField(source='author.username')
+    first_name = serializers.ReadOnlyField(source='author.first_name')
+    last_name = serializers.ReadOnlyField(source='author.last_name')
+    is_subscribed = serializers.SerializerMethodField(read_only=True)
+    recipes = RecipeFollowSerializer(many=True, read_only=True, source='author.recipes')
+    recipes_count = serializers.SerializerMethodField(read_only=True)
 
-    '''
-    def create(self, validated_data):
+    class Meta:
+        model = Follow
+        fields = ('email', 'id', 'username', 'first_name', 'last_name',
+                  'is_subscribed', 'recipes', 'recipes_count')
 
-        Follow.objects.get(tag=tag, recipe=recipe)
-            tag = Tag.objects.get(id=tag.id)
-            TagRecipe.objects.create
-        
-        for ingredient in ingredients:
-            ingredient_id = ingredient['ingredient']['id']
-            amount = ingredient['amount']
-            ingredient = Ingredient.objects.get(id=ingredient_id)
-            IngredientRecipe.objects.create(
-                ingredient=ingredient,
-                recipe=recipe,
-                amount=amount
-                )
-        return recipe'''
+    def get_is_subscribed(self, obj):
+        return Follow.objects.filter(user=obj.user.id, author=obj.author.id).exists()
+
+    def get_recipes_count(self, obj):
+        return Recipe.objects.filter(author=obj.author.id).count()
+
