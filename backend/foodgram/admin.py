@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Follow, Recipe, Tag, Ingredient, TagRecipe, IngredientRecipe
+from .models import Cart, Favorites, Follow, Recipe, Tag, Ingredient, TagRecipe, IngredientRecipe
 
 
 class TagRecipeInline(admin.TabularInline):
@@ -41,8 +41,18 @@ class FollowAdmin(admin.ModelAdmin):
     #list_filter = ('name',)
 
 
+class FavoritesAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'recipe')
+    #list_filter = ('name',)
+
+
+class CartAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'recipe')
+
 
 admin.site.register(Recipe, RecipeAdmin)
 admin.site.register(Ingredient, IngredientAdmin)
 admin.site.register(Tag)
 admin.site.register(Follow, FollowAdmin)
+admin.site.register(Favorites, FavoritesAdmin)
+admin.site.register(Cart, CartAdmin)

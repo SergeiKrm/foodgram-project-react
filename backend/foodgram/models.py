@@ -127,8 +127,12 @@ class Follow(models.Model):
         on_delete=models.CASCADE,
         related_name='following',
     )
-    '''
+    
     class Meta:
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
+
+        '''
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'following'],
@@ -151,8 +155,30 @@ class Favorites(models.Model):
         on_delete=models.CASCADE,
         related_name='favorited',
     )
+
     class Meta:             # ordering = ('name',)
         verbose_name = 'Избранное'
+        verbose_name_plural = 'Избранное'
+
+    def __str__(self):
+        return f'{self.user} {self.recipe}'
+
+
+class Cart(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='cart',
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name='in_cart',
+    )
+
+    class Meta:             # ordering = ('name',)
+        verbose_name = 'Список покупок'
+        verbose_name_plural = 'Списки покупок'
 
     def __str__(self):
         return f'{self.user} {self.recipe}'

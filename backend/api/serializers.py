@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
 
-from foodgram.models import Follow, Ingredient, Recipe, Tag, TagRecipe, IngredientRecipe
+from foodgram.models import Favorites, Follow, Ingredient, Recipe, Tag, TagRecipe, IngredientRecipe
 
 
 import webcolors
@@ -94,7 +94,7 @@ class AddTagSerializer(serializers.ModelSerializer):
 
 class TagSerializer(serializers.ModelSerializer):
     color = Name2HexColor()
-    
+
     class Meta:
         model = Tag
         fields = ('id', 'name', 'color', 'slug')
@@ -104,10 +104,22 @@ class RecipeSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True,)
     author = CustomerUserSerializer(read_only=True)
     ingredients = IngredientAmountSerializer(many=True, read_only=True, source='ingredient_recipes')
+    is_favorited = serializers.SerializerMethodField(read_only=True)
+    is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Recipe
-        fields = ('id', 'tags', 'author', 'ingredients', 'name', 'text', 'cooking_time')
+        fields = ('id', 'tags', 'author', 'ingredients', 'is_favorited', 'is_in_shopping_cart', 'name', 'text', 'cooking_time')
+
+    def get_is_favorited(self, obj):
+        return Favorites.objects.filter(recipe=obj).exists()
+
+    def get_is_in_shopping_cart(self, obj):         # НЕ ГОТОВО ЕЩЕ !
+        # print('!!!obj', obj, type(obj))
+        # print('!!!user', self.context.get('request').user.id)
+        #user = self.context.get('request').user.id
+        #return Follow.objects.filter(user=user, author=obj.id).exists()
+        return False
 
 
 class RecipePostSerializer(serializers.ModelSerializer):
@@ -216,3 +228,9 @@ class FollowPostSerializer(serializers.ModelSerializer):
     def get_recipes_count(self, obj):
         return Recipe.objects.filter(author=obj.author.id).count()
 
+
+class ShortRecipeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'cooking_time') # "image"
