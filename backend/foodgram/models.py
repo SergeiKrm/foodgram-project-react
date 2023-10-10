@@ -90,7 +90,11 @@ class Recipe(models.Model):
 
 
 class IngredientRecipe(models.Model):
-    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
+    ingredient = models.ForeignKey(
+        Ingredient,
+        on_delete=models.CASCADE,
+        related_name='recipe_ingredients'
+        )
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
@@ -131,14 +135,12 @@ class Follow(models.Model):
     class Meta:
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
-
-        '''
         constraints = [
             models.UniqueConstraint(
-                fields=['user', 'following'],
-                name='unique_user_following'
+                fields=['user', 'author'],
+                name='unique_user_author'
             )
-        ]'''
+        ]
 
     def __str__(self):
         return f'{self.user} {self.author}'
@@ -159,6 +161,12 @@ class Favorites(models.Model):
     class Meta:             # ordering = ('name',)
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранное'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='unique_user_recipe'
+            )
+        ]
 
     def __str__(self):
         return f'{self.user} {self.recipe}'
@@ -179,6 +187,12 @@ class Cart(models.Model):
     class Meta:             # ordering = ('name',)
         verbose_name = 'Список покупок'
         verbose_name_plural = 'Списки покупок'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='unique_user_recipe_in_cart'
+            )
+        ]
 
     def __str__(self):
         return f'{self.user} {self.recipe}'

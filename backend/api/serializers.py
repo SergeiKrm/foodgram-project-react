@@ -206,7 +206,7 @@ class FollowSerializer(serializers.ModelSerializer):
     def get_recipes_count(self, obj):
         return Recipe.objects.filter(author=obj.author.id).count()
          
-
+'''
 class FollowPostSerializer(serializers.ModelSerializer):
     email = serializers.ReadOnlyField(source='author.email')
     id = serializers.ReadOnlyField(source='author.id')
@@ -228,7 +228,7 @@ class FollowPostSerializer(serializers.ModelSerializer):
     def get_recipes_count(self, obj):
         return Recipe.objects.filter(author=obj.author.id).count()
 
-
+'''
 class ShortRecipeSerializer(serializers.ModelSerializer):
 
     class Meta:
