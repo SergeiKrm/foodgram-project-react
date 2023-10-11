@@ -38,6 +38,7 @@ class Ingredient(models.Model):
     name = models.CharField(
         max_length=200,
         verbose_name='Ингредиент',
+        unique=True,
         )
     measurement_unit = models.CharField(
         max_length=200,
@@ -79,7 +80,8 @@ class Recipe(models.Model):
     cooking_time = models.IntegerField(
         validators=[MinValueValidator(1)],
         verbose_name='Время приготовления в мин',
-        )               # добавить поле с числом добавлений рецепта в избранное
+        )
+    pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
 
     class Meta:             # ordering = ('name',)
         verbose_name = 'Рецепт'
