@@ -133,16 +133,9 @@ class RecipePostSerializer(serializers.ModelSerializer):
                 'slug': tag.slug})
         return recipe
 
-    def create(self, validated_data):
-        tags = validated_data.pop('tags')
-        ingredients = validated_data.pop('ingredient_recipes')
-        recipe = Recipe.objects.create(**validated_data)
-        
-        for tag in tags:
-            tag = Tag.objects.get(id=tag.id)
-            TagRecipe.objects.create(tag=tag, recipe=recipe)
-        
-        for ingredient in ingredients:
+    @staticmethod
+    def insert_ingredients(ingredient_list, recipe):
+        for ingredient in ingredient_list:
             ingredient_id = ingredient['ingredient']['id']
             amount = ingredient['amount']
             ingredient = Ingredient.objects.get(id=ingredient_id)
@@ -151,7 +144,44 @@ class RecipePostSerializer(serializers.ModelSerializer):
                 recipe=recipe,
                 amount=amount
                 )
+            
+    @staticmethod
+    def insert_tags(tag_list, recipe):
+        for tag in tag_list:
+            tag = Tag.objects.get(id=tag.id)
+            TagRecipe.objects.create(tag=tag, recipe=recipe)
+
+    def create(self, validated_data):
+        tags = validated_data.pop('tags')
+        ingredients = validated_data.pop('ingredient_recipes')
+        recipe = Recipe.objects.create(**validated_data)
+        self.insert_tags(tags, recipe)
+        '''
+        for tag in tags:
+            print('$$$$', tags)
+            tag = Tag.objects.get(id=tag.id)
+            TagRecipe.objects.create(tag=tag, recipe=recipe)
+        '''
+        self.insert_ingredients(ingredients, recipe)
+        '''
+        for ingredient in ingredients:
+            ingredient_id = ingredient['ingredient']['id']
+            amount = ingredient['amount']
+            ingredient = Ingredient.objects.get(id=ingredient_id)
+            IngredientRecipe.objects.create(
+                ingredient=ingredient,
+                recipe=recipe,
+                amount=amount
+                )'''
         return recipe
+    
+    def update(self, instance, validated_data):
+        print('!!!!validated_data', validated_data)
+        instance.ingredients.clear()
+        instance.tags.clear()
+        self.insert_ingredients(validated_data.pop('ingredient_recipes'), instance)
+        self.insert_tags(validated_data.pop('tags'), instance)
+        return super().update(instance, validated_data)
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):

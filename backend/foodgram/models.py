@@ -140,7 +140,8 @@ class Follow(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'author'],
-                name='unique_user_author'
+                name='unique_user_author',
+                violation_error_message='Вы уже подписаны на этого пользователя!'
             )
         ]
 

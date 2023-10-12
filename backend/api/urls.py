@@ -9,7 +9,7 @@ router = DefaultRouter()
 router.register('tags', TagViewSet)
 router.register('ingredients', IngredientViewSet)
 router.register('recipes', RecipeViewSet)
-# router.register('users/(?P<post_id>\\d+)/comments', FollowViewSet, basename='comment')
+
 
 
 urlpatterns = [
