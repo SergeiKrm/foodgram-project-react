@@ -3,18 +3,21 @@ from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404, render
-from djoser.views import UserViewSet
+from djoser.views import UserViewSet as DjoserUserViewSet
 from reportlab.pdfgen import canvas
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase import ttfonts
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.decorators import action, api_view
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from foodgram.models import Cart, Favorites, Follow, Ingredient, Recipe, Tag, IngredientRecipe
+from .pagination import PageLimitPagination
 from .permissions import AuthorOrReadOnly
-from .serializers import ShortRecipeSerializer, FollowSerializer, IngredientSerializer, RecipeSerializer, TagSerializer, RecipePostSerializer
+from .serializers import CustomerUserSerializer, FollowSerializer, IngredientSerializer, RecipeSerializer, ShortRecipeSerializer, TagSerializer, RecipePostSerializer
 
 
 User = get_user_model()
@@ -51,12 +54,14 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = (permissions.AllowAny,)
+    pagination_class = None
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
     permission_classes = (AuthorOrReadOnly,)
+    pagination_class = PageLimitPagination
 
     def get_permissions(self):
         if self.action == 'download_shopping_cart':
@@ -152,36 +157,103 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = (permissions.AllowAny,)
+    pagination_class = None
 
+'''
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = CustomerUserSerializer
+    permission_classes = (IsAuthenticatedOrReadOnly,)
+    pagination_class = LimitOffsetPagination # PageNumberPagination
 
-class APIFollow(APIView):
-    def get(self, request):
-        print(self.request.path)
+    def get_permissions(self):
+        if self.action == 'me':
+            return (permissions.IsAuthenticated(),)
+        return super().get_permissions()
+
+    @action(methods=['post', 'delete'], detail=True)
+    def subscribe(self, request, pk):
+        author = get_object_or_404(User, id=self.kwargs.get('pk'))
+        user = self.request.user
+        subscription = Follow.objects.filter(user=user, author=author)
+
+        if self.request.method == 'POST':
+            if subscription.exists():
+                return Response(
+                    {'Error massage': 'Подписка уже существует!'},
+                    status=status.HTTP_400_BAD_REQUEST
+                    )
+            Follow.objects.create(user=user, author=author)
+            serializer = FollowSerializer(author)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        if subscription.exists():
+            subscription.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            {'Error massage': 'Такой подписки не существует!'},
+            status=status.HTTP_400_BAD_REQUEST
+            )
+
+    @action(methods=['get'], detail=False)
+    def subscriptions(self, request):
         user = self.request.user.id
         subscriptions = Follow.objects.filter(user=user)
         serializer = FollowSerializer(subscriptions, many=True)
         return Response(serializer.data)
+    
+    @action(methods=['get'], detail=False)
+    def me(self, request):
+        user = User.objects.get(id=self.request.user.id)
+        serializer = MeSerializer(user)
+        return Response(serializer.data)'''
+    
 
 
-class APIFollowDetail(APIView):
-    def post(self, request, id):
+class UserViewSet(DjoserUserViewSet):
+    queryset = User.objects.all()
+    permission_classes = (IsAuthenticatedOrReadOnly,)
+    pagination_class = PageLimitPagination
+
+    def get_permissions(self):
+        if self.action == 'me':
+            return (permissions.IsAuthenticated(),)
+        if self.action == 'subscriptions':
+            return (permissions.IsAuthenticated(),)
+        return super().get_permissions()
+
+    @action(methods=['get'], detail=False)
+    def subscriptions(self, request):
+        user = self.request.user.id
+        subscriptions = Follow.objects.filter(user=user)
+        page = self.paginate_queryset(subscriptions)
+        serializer = FollowSerializer(
+            page,
+            many=True,
+            context={'request': request}
+            )
+        return self.get_paginated_response(serializer.data)
+
+    @action(methods=['post', 'delete'], detail=True)
+    def subscribe(self, request, id):
         author = get_object_or_404(User, id=self.kwargs.get('id'))
-        new_subscription = Follow.objects.create(
-            user=self.request.user,
-            author=author
-            )
+        user = self.request.user
+        subscription = Follow.objects.filter(user=user, author=author)
 
-        serializer = FollowSerializer(new_subscription, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
+        if self.request.method == 'POST':
+            if subscription.exists():
+                return Response(
+                    {'Error massage': 'Подписка уже существует!'},
+                    status=status.HTTP_400_BAD_REQUEST
+                    )
+            subscription = Follow.objects.create(user=user, author=author)
+            serializer = FollowSerializer(subscription)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, id):
-        subscription = get_object_or_404(
-            Follow,
-            user=self.request.user.id,
-            author=self.kwargs.get('id')
+        if subscription.exists():
+            subscription.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            {'Error massage': 'Такой подписки не существует!'},
+            status=status.HTTP_400_BAD_REQUEST
             )
-        subscription.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
