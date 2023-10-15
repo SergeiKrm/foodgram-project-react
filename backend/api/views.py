@@ -4,16 +4,18 @@ from django.db.models import Sum
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404, render
 from djoser.views import UserViewSet as DjoserUserViewSet
+from django_filters.rest_framework import DjangoFilterBackend
 from reportlab.pdfgen import canvas
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase import ttfonts
-from rest_framework import generics, permissions, status, viewsets
+from rest_framework import filters, generics, permissions, status, viewsets
 from rest_framework.decorators import action, api_view
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from api.filters import CustomRecipeFilter
 from foodgram.models import Cart, Favorites, Follow, Ingredient, Recipe, Tag, IngredientRecipe
 from .pagination import PageLimitPagination
 from .permissions import AuthorOrReadOnly
@@ -62,6 +64,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
     serializer_class = RecipeSerializer
     permission_classes = (AuthorOrReadOnly,)
     pagination_class = PageLimitPagination
+    filter_backends = (DjangoFilterBackend, filters.OrderingFilter,)
+    # filterset_fields = ('author', 'tags', )  #'is_favorited'
+    filterset_class = CustomRecipeFilter
+    ordering_fields = ('pub_date',)
+    ordering = ('-pub_date',)
 
     def get_permissions(self):
         if self.action == 'download_shopping_cart':
@@ -158,6 +165,8 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
     permission_classes = (permissions.AllowAny,)
     pagination_class = None
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('^name',)
 
 '''
 class UserViewSet(viewsets.ModelViewSet):

@@ -15,7 +15,7 @@ class IngredientRecipeInline(admin.TabularInline):
 
 class RecipeAdmin(admin.ModelAdmin):
     # Перечисляем поля, которые должны отображаться в админке
-    list_display = ('id', 'author', 'name', )
+    list_display = ('id', 'author', 'name', 'pub_date', )
     # Добавляем интерфейс для поиска
     search_fields = ('author', 'name', 'tags')
     # Добавляем возможность фильтрации

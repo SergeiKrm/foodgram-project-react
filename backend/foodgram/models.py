@@ -83,9 +83,10 @@ class Recipe(models.Model):
         )
     pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
 
-    class Meta:             # ordering = ('name',)
+    class Meta:
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
+        ordering = ('-pub_date',)
 
     def __str__(self):
         return self.name
@@ -161,7 +162,7 @@ class Favorites(models.Model):
         related_name='favorited',
     )
 
-    class Meta:             # ordering = ('name',)
+    class Meta:
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранное'
         constraints = [
