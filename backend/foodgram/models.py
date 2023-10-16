@@ -64,7 +64,10 @@ class Recipe(models.Model):
         max_length=200,
         verbose_name='Название',
         )
-    # image - required string <binary> Картинка, закодированная в Base64
+    image = models.ImageField(
+        upload_to='foodgram/images/',
+        verbose_name='Картинка, закодированная в Base64',
+        )
     text = models.TextField(verbose_name='Описание',)
     ingredients = models.ManyToManyField(
         Ingredient,

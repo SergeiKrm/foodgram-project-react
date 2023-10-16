@@ -65,7 +65,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
     permission_classes = (AuthorOrReadOnly,)
     pagination_class = PageLimitPagination
     filter_backends = (DjangoFilterBackend, filters.OrderingFilter,)
-    # filterset_fields = ('author', 'tags', )  #'is_favorited'
     filterset_class = CustomRecipeFilter
     ordering_fields = ('pub_date',)
     ordering = ('-pub_date',)
@@ -78,7 +77,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve',):
             return RecipeSerializer
-        return RecipePostSerializer 
+        return RecipePostSerializer
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -168,56 +167,6 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('^name',)
 
-'''
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = CustomerUserSerializer
-    permission_classes = (IsAuthenticatedOrReadOnly,)
-    pagination_class = LimitOffsetPagination # PageNumberPagination
-
-    def get_permissions(self):
-        if self.action == 'me':
-            return (permissions.IsAuthenticated(),)
-        return super().get_permissions()
-
-    @action(methods=['post', 'delete'], detail=True)
-    def subscribe(self, request, pk):
-        author = get_object_or_404(User, id=self.kwargs.get('pk'))
-        user = self.request.user
-        subscription = Follow.objects.filter(user=user, author=author)
-
-        if self.request.method == 'POST':
-            if subscription.exists():
-                return Response(
-                    {'Error massage': 'Подписка уже существует!'},
-                    status=status.HTTP_400_BAD_REQUEST
-                    )
-            Follow.objects.create(user=user, author=author)
-            serializer = FollowSerializer(author)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-        if subscription.exists():
-            subscription.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(
-            {'Error massage': 'Такой подписки не существует!'},
-            status=status.HTTP_400_BAD_REQUEST
-            )
-
-    @action(methods=['get'], detail=False)
-    def subscriptions(self, request):
-        user = self.request.user.id
-        subscriptions = Follow.objects.filter(user=user)
-        serializer = FollowSerializer(subscriptions, many=True)
-        return Response(serializer.data)
-    
-    @action(methods=['get'], detail=False)
-    def me(self, request):
-        user = User.objects.get(id=self.request.user.id)
-        serializer = MeSerializer(user)
-        return Response(serializer.data)'''
-    
-
 
 class UserViewSet(DjoserUserViewSet):
     queryset = User.objects.all()
@@ -256,7 +205,9 @@ class UserViewSet(DjoserUserViewSet):
                     status=status.HTTP_400_BAD_REQUEST
                     )
             subscription = Follow.objects.create(user=user, author=author)
-            serializer = FollowSerializer(subscription)
+            serializer = FollowSerializer(
+                subscription, context={'request': request}
+                )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         if subscription.exists():
