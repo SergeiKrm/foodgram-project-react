@@ -1,6 +1,9 @@
 from django.contrib import admin
 
-from .models import Cart, Favorites, Follow, Recipe, Tag, Ingredient, TagRecipe, IngredientRecipe
+from .models import (
+    Cart, Favorites, Follow, Ingredient,
+    IngredientRecipe, Recipe, Tag, TagRecipe
+    )
 
 
 class TagRecipeInline(admin.TabularInline):
@@ -14,13 +17,10 @@ class IngredientRecipeInline(admin.TabularInline):
 
 
 class RecipeAdmin(admin.ModelAdmin):
-    # Перечисляем поля, которые должны отображаться в админке
     list_display = ('id', 'author', 'name', 'pub_date', )
-    # Добавляем интерфейс для поиска
     search_fields = ('author', 'name', 'tags')
-    # Добавляем возможность фильтрации
     list_filter = ('author', 'name', 'tags',)
-    inlines = (TagRecipeInline, IngredientRecipeInline)  # для отображения тегов М2М
+    inlines = (TagRecipeInline, IngredientRecipeInline)
 
 
 class TagRecipeAdmin(admin.ModelAdmin):
@@ -38,12 +38,10 @@ class IngredientAdmin(admin.ModelAdmin):
 
 class FollowAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'author')
-    #list_filter = ('name',)
 
 
 class FavoritesAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'recipe')
-    #list_filter = ('name',)
 
 
 class CartAdmin(admin.ModelAdmin):

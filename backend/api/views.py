@@ -2,54 +2,31 @@ import io
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django.http import FileResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet as DjoserUserViewSet
 from django_filters.rest_framework import DjangoFilterBackend
 from reportlab.pdfgen import canvas
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase import ttfonts
-from rest_framework import filters, generics, permissions, status, viewsets
-from rest_framework.decorators import action, api_view
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework import filters, permissions, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from api.filters import CustomRecipeFilter
-from foodgram.models import Cart, Favorites, Follow, Ingredient, Recipe, Tag, IngredientRecipe
+from foodgram.models import (
+    Cart, Favorites, Follow, Ingredient,
+    Recipe, Tag, IngredientRecipe
+    )
 from .pagination import PageLimitPagination
 from .permissions import AuthorOrReadOnly
-from .serializers import CustomerUserSerializer, FollowSerializer, IngredientSerializer, RecipeSerializer, ShortRecipeSerializer, TagSerializer, RecipePostSerializer
-
+from .serializers import (
+    FollowSerializer, IngredientSerializer,
+    RecipePostSerializer, RecipeSerializer,
+    ShortRecipeSerializer, TagSerializer,
+    )
 
 User = get_user_model()
-
-
-def to_pdf(to_pdf):
-    # Create a file-like buffer to receive PDF data.
-    buffer = io.BytesIO()
-
-    # Create the PDF object, using the buffer as its "file."
-    p = canvas.Canvas(buffer)
-
-    textob = p.beginText()   # !!!
-    textob.textLine(to_pdf)
-
-
-
-    # Draw things on the PDF. Here's where the PDF generation happens.
-    # See the ReportLab documentation for the full list of functionality.
-    p.drawString(100, 100, to_pdf)
-    #p.drawString(100, 100, "Hello world.")
-
-    # Close the PDF object cleanly, and we're done.
-    p.showPage()
-    p.save()
-
-    # FileResponse sets the Content-Disposition header so that browsers
-    # present the option to save the file.
-    buffer.seek(0)
-    return FileResponse(buffer, as_attachment=True, filename="cart.pdf")
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -136,7 +113,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(methods=['get'], detail=False)
     def download_shopping_cart(self, request):
-        ingredients = IngredientRecipe.objects.filter(recipe__in_cart__user=request.user.id).values(
+        ingredients = IngredientRecipe.objects.filter(
+            recipe__in_cart__user=request.user.id).values(
             'ingredient__name', 'ingredient__measurement_unit'
             ).annotate(total_amount=Sum('amount'))
 

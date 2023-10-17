@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MinValueValidator
 
 
 User = get_user_model()
@@ -137,7 +137,7 @@ class Follow(models.Model):
         on_delete=models.CASCADE,
         related_name='following',
     )
-    
+
     class Meta:
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
@@ -145,7 +145,7 @@ class Follow(models.Model):
             models.UniqueConstraint(
                 fields=['user', 'author'],
                 name='unique_user_author',
-                violation_error_message='Вы уже подписаны на этого пользователя!'
+                violation_error_message='Вы уже подписаны на этого автора!'
             )
         ]
 
