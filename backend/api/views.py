@@ -112,8 +112,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def download_shopping_cart(self, request):
         ingredients = IngredientRecipe.objects.filter(
             recipe__in_cart__user=request.user.id).values(
-                'ingredient__name', 'ingredient__measurement_unit'
-            ).annotate(total_amount=Sum('amount'))
+                'ingredient__name', 'ingredient__measurement_unit').annotate(
+                    total_amount=Sum('amount'))
 
         buffer = io.BytesIO()
         pdf = canvas.Canvas(buffer)
