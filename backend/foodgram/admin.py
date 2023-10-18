@@ -1,9 +1,12 @@
 from django.contrib import admin
-
+from django.contrib.auth import get_user_model
 from .models import (
     Cart, Favorites, Follow, Ingredient,
     IngredientRecipe, Recipe, Tag, TagRecipe
     )
+
+
+User = get_user_model()
 
 
 class TagRecipeInline(admin.TabularInline):
@@ -17,10 +20,13 @@ class IngredientRecipeInline(admin.TabularInline):
 
 
 class RecipeAdmin(admin.ModelAdmin):
-    list_display = ('id', 'author', 'name', 'pub_date', )
+    list_display = ('id', 'author', 'name', 'pub_date', 'favorited_count')
     search_fields = ('author', 'name', 'tags')
     list_filter = ('author', 'name', 'tags',)
     inlines = (TagRecipeInline, IngredientRecipeInline)
+
+    def favorited_count(self, obj):
+        return obj.favorited.count()
 
 
 class TagRecipeAdmin(admin.ModelAdmin):
@@ -46,6 +52,10 @@ class FavoritesAdmin(admin.ModelAdmin):
 
 class CartAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'recipe')
+
+
+class UserAdmin(admin.ModelAdmin):
+    list_filter = ('email', 'username')
 
 
 admin.site.register(Recipe, RecipeAdmin)

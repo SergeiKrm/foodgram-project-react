@@ -142,7 +142,7 @@ class RecipePostSerializer(serializers.ModelSerializer):
             'id', 'tags', 'author', 'ingredients', 'is_favorited',
             'is_in_shopping_cart', 'name', 'image', 'text', 'cooking_time',
             )
-        
+
     def get_is_favorited(self, obj):
         return Favorites.objects.filter(recipe=obj).exists()
 
@@ -190,7 +190,6 @@ class RecipePostSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         print('!!!!validated_data', validated_data)
-                
         if validated_data.get('ingredient_recipes'):
             instance.ingredients.clear()
             self.insert_ingredients(
