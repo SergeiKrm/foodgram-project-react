@@ -133,13 +133,21 @@ class RecipePostSerializer(serializers.ModelSerializer):
         source='ingredient_recipes'
         )
     image = Base64ImageField(required=True, allow_null=False)
+    is_favorited = serializers.SerializerMethodField(read_only=True)
+    is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Recipe
         fields = (
-            'id', 'tags', 'author', 'ingredients',
-            'name', 'image', 'text', 'cooking_time',
+            'id', 'tags', 'author', 'ingredients', 'is_favorited',
+            'is_in_shopping_cart', 'name', 'image', 'text', 'cooking_time',
             )
+        
+    def get_is_favorited(self, obj):
+        return Favorites.objects.filter(recipe=obj).exists()
+
+    def get_is_in_shopping_cart(self, obj):
+        return Cart.objects.filter(recipe=obj).exists()
 
     def to_representation(self, instance):
         recipe = super().to_representation(instance)
@@ -182,13 +190,16 @@ class RecipePostSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         print('!!!!validated_data', validated_data)
-        instance.ingredients.clear()
-        instance.tags.clear()
-        self.insert_ingredients(
-            validated_data.pop('ingredient_recipes'),
-            instance
-            )
-        self.insert_tags(validated_data.pop('tags'), instance)
+                
+        if validated_data.get('ingredient_recipes'):
+            instance.ingredients.clear()
+            self.insert_ingredients(
+                validated_data.pop('ingredient_recipes'),
+                instance
+                )
+        if validated_data.get('tags'):
+            instance.tags.clear()
+            self.insert_tags(validated_data.pop('tags'), instance)
         return super().update(instance, validated_data)
 
 

@@ -1,3 +1,4 @@
+from django.contrib.auth.models import AnonymousUser
 from django_filters.rest_framework import (
     BooleanFilter,
     FilterSet,
@@ -24,6 +25,8 @@ class CustomRecipeFilter(FilterSet):
 
     def favorited_or_in_cart(self, queryset, name, value):
         user = self.request.user
+        if isinstance(user, AnonymousUser):
+            return queryset
         if value:
             return queryset.filter(**{name: user})
         return queryset.exclude(**{name: user})
