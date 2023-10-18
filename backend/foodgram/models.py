@@ -11,20 +11,20 @@ class Tag(models.Model):
         max_length=200,
         verbose_name='Название',
         unique=True,
-        )
+    )
     color = models.CharField(
         max_length=7,
         verbose_name='Цвет в HEX',
         null=True,
         unique=True,
-        )
+    )
 
     slug = models.SlugField(
         max_length=200,
         verbose_name='Уникальный слаг',
         null=True,
         unique=True,
-        )
+    )
 
     class Meta:
         verbose_name = ('Тег')
@@ -39,11 +39,11 @@ class Ingredient(models.Model):
         max_length=200,
         verbose_name='Ингредиент',
         unique=True,
-        )
+    )
     measurement_unit = models.CharField(
         max_length=200,
         verbose_name='Единица измерения',
-        )
+    )
 
     class Meta:
         verbose_name = ('Ингредиент')
@@ -63,27 +63,27 @@ class Recipe(models.Model):
     name = models.CharField(
         max_length=200,
         verbose_name='Название',
-        )
+    )
     image = models.ImageField(
         upload_to='foodgram/images/',
         verbose_name='Картинка, закодированная в Base64',
-        )
+    )
     text = models.TextField(verbose_name='Описание',)
     ingredients = models.ManyToManyField(
         Ingredient,
         through='IngredientRecipe',
         verbose_name='Список ингредиентов',
         related_name='recipes'
-        )
+    )
     tags = models.ManyToManyField(
         Tag,
         through='TagRecipe',
         related_name='recipes',
-        )
+    )
     cooking_time = models.IntegerField(
         validators=[MinValueValidator(1)],
         verbose_name='Время приготовления в мин',
-        )
+    )
     pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
 
     class Meta:
@@ -100,15 +100,15 @@ class IngredientRecipe(models.Model):
         Ingredient,
         on_delete=models.CASCADE,
         related_name='recipe_ingredients'
-        )
+    )
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
         related_name='ingredient_recipes'
-        )
+    )
     amount = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1)],
-        )
+    )
 
     def __str__(self):
         return f'{self.ingredient} {self.recipe}'
@@ -120,7 +120,7 @@ class TagRecipe(models.Model):
         Recipe,
         on_delete=models.CASCADE,
         related_name='tag_recipes'
-        )
+    )
 
     def __str__(self):
         return f'{self.tag} {self.recipe}'

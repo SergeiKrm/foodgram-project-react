@@ -1,30 +1,27 @@
 import io
+
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet as DjoserUserViewSet
 from django_filters.rest_framework import DjangoFilterBackend
+from reportlab.pdfbase import pdfmetrics, ttfonts
 from reportlab.pdfgen import canvas
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase import ttfonts
 from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 
 from api.filters import CustomRecipeFilter
-from foodgram.models import (
-    Cart, Favorites, Follow, Ingredient,
-    Recipe, Tag, IngredientRecipe
-    )
+from foodgram.models import (Cart, Favorites, Follow, Ingredient,
+                             IngredientRecipe, Recipe, Tag)
+
 from .pagination import PageLimitPagination
 from .permissions import AuthorOrReadOnly
-from .serializers import (
-    FollowSerializer, IngredientSerializer,
-    RecipePostSerializer, RecipeSerializer,
-    ShortRecipeSerializer, TagSerializer,
-    )
+from .serializers import (FollowSerializer, IngredientSerializer,
+                          RecipePostSerializer, RecipeSerializer,
+                          ShortRecipeSerializer, TagSerializer)
 
 User = get_user_model()
 
@@ -65,14 +62,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
         favorite_recipe = Favorites.objects.filter(
             user=self.request.user,
             recipe=recipe
-            )
+        )
 
         if self.request.method == 'POST':
             if favorite_recipe.exists():
                 return Response(
                     {'Error massage': 'Рецепт уже есть в избранном!'},
                     status=status.HTTP_400_BAD_REQUEST
-                    )
+                )
             Favorites.objects.create(user=self.request.user, recipe=recipe)
             serializer = ShortRecipeSerializer(recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -83,7 +80,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return Response(
             {'Error massage': 'Рецепт не был добавлен  в избранное!'},
             status=status.HTTP_400_BAD_REQUEST
-            )
+        )
 
     @action(methods=['post', 'delete'], detail=True)
     def shopping_cart(self, request, pk):
@@ -91,14 +88,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
         recipe_in_cart = Cart.objects.filter(
             user=self.request.user,
             recipe=recipe
-            )
+        )
 
         if self.request.method == 'POST':
             if recipe_in_cart.exists():
                 return Response(
                     {'Error massage': 'Рецепт уже есть в списке покупок!'},
                     status=status.HTTP_400_BAD_REQUEST
-                    )
+                )
             Cart.objects.create(user=self.request.user, recipe=recipe)
             serializer = ShortRecipeSerializer(recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -109,13 +106,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return Response(
             {'Error massage': 'Рецепт отсутствует в списке покупок!'},
             status=status.HTTP_400_BAD_REQUEST
-            )
+        )
 
     @action(methods=['get'], detail=False)
     def download_shopping_cart(self, request):
         ingredients = IngredientRecipe.objects.filter(
             recipe__in_cart__user=request.user.id).values(
-            'ingredient__name', 'ingredient__measurement_unit'
+                'ingredient__name', 'ingredient__measurement_unit'
             ).annotate(total_amount=Sum('amount'))
 
         buffer = io.BytesIO()
@@ -167,7 +164,7 @@ class UserViewSet(DjoserUserViewSet):
             page,
             many=True,
             context={'request': request}
-            )
+        )
         return self.get_paginated_response(serializer.data)
 
     @action(methods=['post', 'delete'], detail=True)
@@ -181,11 +178,11 @@ class UserViewSet(DjoserUserViewSet):
                 return Response(
                     {'Error massage': 'Подписка уже существует!'},
                     status=status.HTTP_400_BAD_REQUEST
-                    )
+                )
             subscription = Follow.objects.create(user=user, author=author)
             serializer = FollowSerializer(
                 subscription, context={'request': request}
-                )
+            )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         if subscription.exists():
@@ -194,4 +191,4 @@ class UserViewSet(DjoserUserViewSet):
         return Response(
             {'Error massage': 'Такой подписки не существует!'},
             status=status.HTTP_400_BAD_REQUEST
-            )
+        )

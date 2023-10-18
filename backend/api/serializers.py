@@ -10,11 +10,11 @@ from foodgram.models import (
     Favorites,
     Follow,
     Ingredient,
+    IngredientRecipe,
     Recipe,
     Tag,
     TagRecipe,
-    IngredientRecipe
-    )
+)
 
 
 class Name2HexColor(serializers.Field):
@@ -31,7 +31,7 @@ class Name2HexColor(serializers.Field):
                 'Введите название цвета из палитры "Basic Colors" '
                 'https://www.w3.org/wiki/CSS/Properties/color/keywords'
                 ' или укажите цветовой код в hex-формате (например, #49B64E)'
-                )
+            )
         return data
 
 
@@ -49,7 +49,7 @@ class IngredientAmountSerializer(serializers.ModelSerializer):
     name = serializers.ReadOnlyField(source='ingredient.name')
     measurement_unit = serializers.ReadOnlyField(
         source='ingredient.measurement_unit'
-        )
+    )
 
     class Meta:
         model = IngredientRecipe
@@ -82,7 +82,7 @@ class AddIngredientSerializer(serializers.ModelSerializer):
     name = serializers.ReadOnlyField(source='ingredient.name')
     measurement_unit = serializers.ReadOnlyField(
         source='ingredient.measurement_unit'
-        )
+    )
 
     class Meta:
         model = IngredientRecipe
@@ -104,7 +104,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         many=True,
         read_only=True,
         source='ingredient_recipes'
-        )
+    )
     is_favorited = serializers.SerializerMethodField(read_only=True)
     is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
 
@@ -113,7 +113,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'tags', 'author', 'ingredients', 'is_favorited',
             'is_in_shopping_cart', 'name', 'image', 'text', 'cooking_time',
-            )
+        )
 
     def get_is_favorited(self, obj):
         return Favorites.objects.filter(recipe=obj).exists()
@@ -126,12 +126,12 @@ class RecipePostSerializer(serializers.ModelSerializer):
     tags = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=Tag.objects.all()
-        )
+    )
     author = CustomerUserSerializer(read_only=True)
     ingredients = AddIngredientSerializer(
         many=True,
         source='ingredient_recipes'
-        )
+    )
     image = Base64ImageField(required=True, allow_null=False)
     is_favorited = serializers.SerializerMethodField(read_only=True)
     is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
@@ -141,7 +141,7 @@ class RecipePostSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'tags', 'author', 'ingredients', 'is_favorited',
             'is_in_shopping_cart', 'name', 'image', 'text', 'cooking_time',
-            )
+        )
 
     def get_is_favorited(self, obj):
         return Favorites.objects.filter(recipe=obj).exists()
@@ -172,7 +172,7 @@ class RecipePostSerializer(serializers.ModelSerializer):
                 ingredient=ingredient,
                 recipe=recipe,
                 amount=amount
-                )
+            )
 
     @staticmethod
     def insert_tags(tag_list, recipe):
@@ -195,7 +195,7 @@ class RecipePostSerializer(serializers.ModelSerializer):
             self.insert_ingredients(
                 validated_data.pop('ingredient_recipes'),
                 instance
-                )
+            )
         if validated_data.get('tags'):
             instance.tags.clear()
             self.insert_tags(validated_data.pop('tags'), instance)
@@ -211,7 +211,7 @@ class CustomUserCreateSerializer(UserCreateSerializer):
         model = User
         fields = (
             'email', 'id', 'username', 'first_name', 'last_name', 'password',
-            )
+        )
 
 
 class ShortRecipeSerializer(serializers.ModelSerializer):

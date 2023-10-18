@@ -1,10 +1,7 @@
 from django.contrib.auth.models import AnonymousUser
 from django_filters.rest_framework import (
-    BooleanFilter,
-    FilterSet,
-    ModelMultipleChoiceFilter
+    BooleanFilter, FilterSet, ModelMultipleChoiceFilter
     )
-
 from foodgram.models import Recipe, Tag
 
 
@@ -21,7 +18,7 @@ class CustomRecipeFilter(FilterSet):
         field_name='tags__slug',
         to_field_name='slug',
         queryset=Tag.objects.all(),
-    )
+        )
 
     def favorited_or_in_cart(self, queryset, name, value):
         user = self.request.user
