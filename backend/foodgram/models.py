@@ -110,6 +110,17 @@ class IngredientRecipe(models.Model):
         validators=[MinValueValidator(1)],
     )
 
+    class Meta:
+        verbose_name = 'Ингредиент в рецепте'
+        verbose_name_plural = 'Ингредиенты в рецептах'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['ingredient', 'recipe'],
+                name='unique_ingredient_recipe',
+                violation_error_message='Ингредиент уже есть в рецепте!'
+            )
+        ]
+
     def __str__(self):
         return f'{self.ingredient} {self.recipe}'
 
@@ -121,6 +132,17 @@ class TagRecipe(models.Model):
         on_delete=models.CASCADE,
         related_name='tag_recipes'
     )
+
+    class Meta:
+        verbose_name = 'Тег в рецепте'
+        verbose_name_plural = 'Теги в рецептах'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['tag', 'recipe'],
+                name='unique_tag_recipe',
+                violation_error_message='Тег уже есть в рецепте!'
+            )
+        ]
 
     def __str__(self):
         return f'{self.tag} {self.recipe}'
@@ -153,7 +175,7 @@ class Follow(models.Model):
         return f'{self.user} {self.author}'
 
 
-class Favorites(models.Model):
+class Favorite(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -191,7 +213,7 @@ class Cart(models.Model):
         related_name='in_cart',
     )
 
-    class Meta:             # ordering = ('name',)
+    class Meta:
         verbose_name = 'Список покупок'
         verbose_name_plural = 'Списки покупок'
         constraints = [

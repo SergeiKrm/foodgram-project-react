@@ -1,7 +1,3 @@
-"""
-Django settings for backend project.
-"""
-
 import os
 
 from dotenv import load_dotenv
@@ -20,8 +16,6 @@ ALLOWED_HOSTS = []
 
 
 INSTALLED_APPS = [
-    'foodgram.apps.FoodgramConfig',
-    'api.apps.ApiConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -32,6 +26,8 @@ INSTALLED_APPS = [
     'django_filters',
     'rest_framework.authtoken',
     'djoser',
+    'foodgram.apps.FoodgramConfig',
+    'api.apps.ApiConfig',
 ]
 
 MIDDLEWARE = [
@@ -65,9 +61,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'backend.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/2.2/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -92,10 +85,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# Internationalization
-# https://docs.djangoproject.com/en/2.2/topics/i18n/
-
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru-RU'
 
 TIME_ZONE = 'UTC'
 

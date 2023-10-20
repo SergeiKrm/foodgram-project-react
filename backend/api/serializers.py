@@ -7,7 +7,7 @@ from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
 from foodgram.models import (
     Cart,
-    Favorites,
+    Favorite,
     Follow,
     Ingredient,
     IngredientRecipe,
@@ -116,7 +116,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         )
 
     def get_is_favorited(self, obj):
-        return Favorites.objects.filter(recipe=obj).exists()
+        return Favorite.objects.filter(recipe=obj).exists()
 
     def get_is_in_shopping_cart(self, obj):
         return Cart.objects.filter(recipe=obj).exists()
@@ -144,7 +144,7 @@ class RecipePostSerializer(serializers.ModelSerializer):
         )
 
     def get_is_favorited(self, obj):
-        return Favorites.objects.filter(recipe=obj).exists()
+        return Favorite.objects.filter(recipe=obj).exists()
 
     def get_is_in_shopping_cart(self, obj):
         return Cart.objects.filter(recipe=obj).exists()

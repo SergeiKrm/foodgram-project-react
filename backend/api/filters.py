@@ -1,7 +1,7 @@
-from django.contrib.auth.models import AnonymousUser
 from django_filters.rest_framework import (
     BooleanFilter, FilterSet, ModelMultipleChoiceFilter
 )
+
 from foodgram.models import Recipe, Tag
 
 
@@ -21,9 +21,9 @@ class CustomRecipeFilter(FilterSet):
     )
 
     def favorited_or_in_cart(self, queryset, name, value):
-        user = self.request.user
-        if isinstance(user, AnonymousUser):
+        if not self.request.user.is_authenticated:
             return queryset
+        user = self.request.user
         if value:
             return queryset.filter(**{name: user})
         return queryset.exclude(**{name: user})

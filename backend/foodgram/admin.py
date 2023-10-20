@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth import get_user_model
-from .models import (Cart, Favorites, Follow, Ingredient,
+
+from .models import (Cart, Favorite, Follow, Ingredient,
                      IngredientRecipe, Recipe, Tag, TagRecipe)
 
 User = get_user_model()
@@ -52,6 +53,7 @@ class CartAdmin(admin.ModelAdmin):
 
 
 class UserAdmin(admin.ModelAdmin):
+    list_display = ('id', 'email', 'username', 'first_name', 'last_name',)
     list_filter = ('email', 'username')
 
 
@@ -59,5 +61,8 @@ admin.site.register(Recipe, RecipeAdmin)
 admin.site.register(Ingredient, IngredientAdmin)
 admin.site.register(Tag)
 admin.site.register(Follow, FollowAdmin)
-admin.site.register(Favorites, FavoritesAdmin)
+admin.site.register(Favorite, FavoritesAdmin)
 admin.site.register(Cart, CartAdmin)
+
+admin.site.unregister(User)
+admin.site.register(User, UserAdmin)

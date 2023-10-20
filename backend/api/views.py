@@ -14,7 +14,7 @@ from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 
 from api.filters import CustomRecipeFilter
-from foodgram.models import (Cart, Favorites, Follow, Ingredient,
+from foodgram.models import (Cart, Favorite, Follow, Ingredient,
                              IngredientRecipe, Recipe, Tag)
 
 from .pagination import PageLimitPagination
@@ -59,7 +59,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(methods=['post', 'delete'], detail=True)
     def favorite(self, request, pk):
         recipe = get_object_or_404(Recipe, id=pk)
-        favorite_recipe = Favorites.objects.filter(
+        favorite_recipe = Favorite.objects.filter(
             user=self.request.user,
             recipe=recipe
         )
@@ -70,7 +70,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
                     {'Error massage': 'Рецепт уже есть в избранном!'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            Favorites.objects.create(user=self.request.user, recipe=recipe)
+            Favorite.objects.create(user=self.request.user, recipe=recipe)
             serializer = ShortRecipeSerializer(recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
