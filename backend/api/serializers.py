@@ -1,13 +1,14 @@
-import base64
-import webcolors
-
 from django.contrib.auth.models import User
-from django.core.files.base import ContentFile
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
+
+from api.fields import (Base64ImageField,
+                        Name2HexColor,
+                        get_is_in_shopping_cart,
+                        get_is_favorited,
+                        get_is_subscribed
+                        )
 from foodgram.models import (
-    Cart,
-    Favorite,
     Follow,
     Ingredient,
     IngredientRecipe,
@@ -15,33 +16,6 @@ from foodgram.models import (
     Tag,
     TagRecipe,
 )
-
-
-class Name2HexColor(serializers.Field):
-    def to_representation(self, value):
-        return value
-
-    def to_internal_value(self, data):
-        if data[0] == '#':
-            return data
-        try:
-            data = webcolors.name_to_hex(data)
-        except ValueError:
-            raise serializers.ValidationError(
-                'Введите название цвета из палитры "Basic Colors" '
-                'https://www.w3.org/wiki/CSS/Properties/color/keywords'
-                ' или укажите цветовой код в hex-формате (например, #49B64E)'
-            )
-        return data
-
-
-class Base64ImageField(serializers.ImageField):
-    def to_internal_value(self, data):
-        if isinstance(data, str) and data.startswith('data:image'):
-            format, imgstr = data.split(';base64,')
-            ext = format.split('/')[-1]
-            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
-        return super().to_internal_value(data)
 
 
 class IngredientAmountSerializer(serializers.ModelSerializer):
@@ -65,8 +39,7 @@ class CustomerUserSerializer(UserSerializer):
                   'last_name', 'is_subscribed', )
 
     def get_is_subscribed(self, obj):
-        user = self.context.get('request').user.id
-        return Follow.objects.filter(user=user, author=obj.id).exists()
+        return get_is_subscribed(self, obj)
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -116,10 +89,10 @@ class RecipeSerializer(serializers.ModelSerializer):
         )
 
     def get_is_favorited(self, obj):
-        return Favorite.objects.filter(recipe=obj).exists()
+        return get_is_favorited(self, obj)
 
     def get_is_in_shopping_cart(self, obj):
-        return Cart.objects.filter(recipe=obj).exists()
+        return get_is_in_shopping_cart(self, obj)
 
 
 class RecipePostSerializer(serializers.ModelSerializer):
@@ -143,11 +116,23 @@ class RecipePostSerializer(serializers.ModelSerializer):
             'is_in_shopping_cart', 'name', 'image', 'text', 'cooking_time',
         )
 
+    def validate(self, data):
+        ingredients = data.get('ingredient_recipes')
+        if ingredients:
+            print('!!!!ing', ingredients)
+            ingredients_list = []
+            for element in ingredients:
+                ingredients_list.append(element['ingredient'].get('id'))
+            if len(ingredients) != len(set(ingredients_list)):
+                raise serializers.ValidationError('Ингредиенты не уникальны!')
+            return data
+        return data
+
     def get_is_favorited(self, obj):
-        return Favorite.objects.filter(recipe=obj).exists()
+        return get_is_favorited(self, obj)
 
     def get_is_in_shopping_cart(self, obj):
-        return Cart.objects.filter(recipe=obj).exists()
+        return get_is_in_shopping_cart(self, obj)
 
     def to_representation(self, instance):
         recipe = super().to_representation(instance)
@@ -155,30 +140,29 @@ class RecipePostSerializer(serializers.ModelSerializer):
         recipe['tags'] = []
         for tag in tags:
             tag = Tag.objects.get(id=tag)
-            recipe['tags'].append({
-                'id': tag.id,
-                'name': tag.name,
-                'color': tag.color,
-                'slug': tag.slug})
+            serializer = TagSerializer(tag)
+            recipe['tags'].append(serializer.data)
         return recipe
 
     @staticmethod
     def insert_ingredients(ingredient_list, recipe):
+        objects = []
         for ingredient in ingredient_list:
             ingredient_id = ingredient['ingredient']['id']
             amount = ingredient['amount']
-            ingredient = Ingredient.objects.get(id=ingredient_id)
-            IngredientRecipe.objects.create(
-                ingredient=ingredient,
+            item = IngredientRecipe(
+                ingredient_id=ingredient_id,
                 recipe=recipe,
-                amount=amount
-            )
+                amount=amount)
+            objects.append(item)
+        IngredientRecipe.objects.bulk_create(objects)
 
     @staticmethod
     def insert_tags(tag_list, recipe):
+        objects = []
         for tag in tag_list:
-            tag = Tag.objects.get(id=tag.id)
-            TagRecipe.objects.create(tag=tag, recipe=recipe)
+            objects.append(TagRecipe(tag_id=tag.id, recipe=recipe))
+        TagRecipe.objects.bulk_create(objects)
 
     def create(self, validated_data):
         tags = validated_data.pop('tags')
@@ -189,7 +173,6 @@ class RecipePostSerializer(serializers.ModelSerializer):
         return recipe
 
     def update(self, instance, validated_data):
-        print('!!!!validated_data', validated_data)
         if validated_data.get('ingredient_recipes'):
             instance.ingredients.clear()
             self.insert_ingredients(
@@ -237,17 +220,14 @@ class FollowSerializer(serializers.ModelSerializer):
                   'is_subscribed', 'recipes', 'recipes_count')
 
     def get_is_subscribed(self, obj):
-        return Follow.objects.filter(
-            user=obj.user.id, author=obj.author.id).exists()
+        return get_is_subscribed(self, obj)
 
     def get_recipes_count(self, obj):
         return Recipe.objects.filter(author=obj.author.id).count()
 
     def get_recipes(self, obj):
         request = self.context.get('request')
-        print('!!!!request=', request)
         recipes_limit = request.GET.get('recipes_limit')
-        print('!!!!recipes_limit=', recipes_limit)
         recipes = Recipe.objects.filter(author=obj.author)
         if recipes_limit:
             recipes = recipes[:int(recipes_limit)]

@@ -16,7 +16,6 @@ from rest_framework.response import Response
 from api.filters import CustomRecipeFilter
 from foodgram.models import (Cart, Favorite, Follow, Ingredient,
                              IngredientRecipe, Recipe, Tag)
-
 from .pagination import PageLimitPagination
 from .permissions import AuthorOrReadOnly
 from .serializers import (FollowSerializer, IngredientSerializer,
@@ -24,6 +23,13 @@ from .serializers import (FollowSerializer, IngredientSerializer,
                           ShortRecipeSerializer, TagSerializer)
 
 User = get_user_model()
+
+
+def delete_if_exists(sample, message):
+    if sample.exists():
+        sample.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    return Response({message}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -56,57 +62,45 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
-    @action(methods=['post', 'delete'], detail=True)
-    def favorite(self, request, pk):
+    def post_delete_detail_method(self, request, pk,
+                                  Model,
+                                  post_bad_request_text,
+                                  delete_bad_request_text):
         recipe = get_object_or_404(Recipe, id=pk)
-        favorite_recipe = Favorite.objects.filter(
+        filtered_recipes = Model.objects.filter(
             user=self.request.user,
             recipe=recipe
         )
 
         if self.request.method == 'POST':
-            if favorite_recipe.exists():
+            if filtered_recipes.exists():
                 return Response(
-                    {'Error massage': 'Рецепт уже есть в избранном!'},
-                    status=status.HTTP_400_BAD_REQUEST
+                    {post_bad_request_text}, status=status.HTTP_400_BAD_REQUEST
                 )
-            Favorite.objects.create(user=self.request.user, recipe=recipe)
+            Model.objects.create(user=self.request.user, recipe=recipe)
             serializer = ShortRecipeSerializer(recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return delete_if_exists(filtered_recipes, delete_bad_request_text)
 
-        if favorite_recipe.exists():
-            favorite_recipe.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(
-            {'Error massage': 'Рецепт не был добавлен  в избранное!'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+    @action(methods=['post', 'delete'], detail=True)
+    def favorite(self, request, pk):
+        post_bad_request_text = 'Рецепт уже есть в избранном!'
+        delete_bad_request_text = 'Рецепт отсутствует в избранном!'
+        return self.post_delete_detail_method(request,
+                                              pk,
+                                              Favorite,
+                                              post_bad_request_text,
+                                              delete_bad_request_text)
 
     @action(methods=['post', 'delete'], detail=True)
     def shopping_cart(self, request, pk):
-        recipe = get_object_or_404(Recipe, id=pk)
-        recipe_in_cart = Cart.objects.filter(
-            user=self.request.user,
-            recipe=recipe
-        )
-
-        if self.request.method == 'POST':
-            if recipe_in_cart.exists():
-                return Response(
-                    {'Error massage': 'Рецепт уже есть в списке покупок!'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            Cart.objects.create(user=self.request.user, recipe=recipe)
-            serializer = ShortRecipeSerializer(recipe)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-        if recipe_in_cart.exists():
-            recipe_in_cart.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(
-            {'Error massage': 'Рецепт отсутствует в списке покупок!'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        post_bad_request_text = 'Рецепт уже есть в списке покупок!'
+        delete_bad_request_text = 'Рецепт отсутствует в списке покупок!'
+        return self.post_delete_detail_method(request,
+                                              pk,
+                                              Cart,
+                                              post_bad_request_text,
+                                              delete_bad_request_text)
 
     @action(methods=['get'], detail=False)
     def download_shopping_cart(self, request):
@@ -185,10 +179,6 @@ class UserViewSet(DjoserUserViewSet):
             )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        if subscription.exists():
-            subscription.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(
-            {'Error massage': 'Такой подписки не существует!'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        return delete_if_exists(
+            subscription, 'Error massage: Такой подписки не существует!'
+            )
