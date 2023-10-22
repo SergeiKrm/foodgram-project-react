@@ -181,4 +181,4 @@ class UserViewSet(DjoserUserViewSet):
 
         return delete_if_exists(
             subscription, 'Error massage: Такой подписки не существует!'
-            )
+        )
