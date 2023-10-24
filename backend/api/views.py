@@ -66,7 +66,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
         )
         if filtered_recipes.exists():
             if self.request.method == 'POST':
-                return Response({post_bad_request_text}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {post_bad_request_text},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             filtered_recipes.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -74,7 +77,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
             Model.objects.create(user=self.request.user, recipe=recipe)
             serializer = ShortRecipeSerializer(recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response({delete_bad_request_text}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {delete_bad_request_text},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
     @action(methods=['post', 'delete'], detail=True)
     def favorite(self, request, pk):
