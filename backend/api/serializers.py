@@ -2,12 +2,12 @@ from django.contrib.auth.models import User
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
 
-from api.fields import (Base64ImageField,
-                        Name2HexColor,
-                        get_is_in_shopping_cart,
-                        get_is_favorited,
-                        get_is_subscribed
-                        )
+from api.fields import Base64ImageField, Name2HexColor
+from api.utils import (
+    get_is_in_shopping_cart,
+    get_is_favorited,
+    get_is_subscribed
+)
 from foodgram.models import (
     Follow,
     Ingredient,
@@ -100,6 +100,7 @@ class RecipePostSerializer(serializers.ModelSerializer):
         many=True,
         queryset=Tag.objects.all()
     )
+
     author = CustomerUserSerializer(read_only=True)
     ingredients = AddIngredientSerializer(
         many=True,
@@ -119,7 +120,6 @@ class RecipePostSerializer(serializers.ModelSerializer):
     def validate(self, data):
         ingredients = data.get('ingredient_recipes')
         if ingredients:
-            print('!!!!ing', ingredients)
             ingredients_list = []
             for element in ingredients:
                 ingredients_list.append(element['ingredient'].get('id'))
@@ -135,14 +135,9 @@ class RecipePostSerializer(serializers.ModelSerializer):
         return get_is_in_shopping_cart(self, obj)
 
     def to_representation(self, instance):
-        recipe = super().to_representation(instance)
-        tags = recipe['tags']
-        recipe['tags'] = []
-        for tag in tags:
-            tag = Tag.objects.get(id=tag)
-            serializer = TagSerializer(tag)
-            recipe['tags'].append(serializer.data)
-        return recipe
+        request = self.context.get('request')
+        serializer = RecipeSerializer(instance, context={'request': request})
+        return serializer.data
 
     @staticmethod
     def insert_ingredients(ingredient_list, recipe):

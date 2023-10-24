@@ -25,13 +25,6 @@ from .serializers import (FollowSerializer, IngredientSerializer,
 User = get_user_model()
 
 
-def delete_if_exists(sample, message):
-    if sample.exists():
-        sample.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-    return Response({message}, status=status.HTTP_400_BAD_REQUEST)
-
-
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
@@ -71,16 +64,17 @@ class RecipeViewSet(viewsets.ModelViewSet):
             user=self.request.user,
             recipe=recipe
         )
+        if filtered_recipes.exists():
+            if self.request.method == 'POST':
+                return Response({post_bad_request_text}, status=status.HTTP_400_BAD_REQUEST)
+            filtered_recipes.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
         if self.request.method == 'POST':
-            if filtered_recipes.exists():
-                return Response(
-                    {post_bad_request_text}, status=status.HTTP_400_BAD_REQUEST
-                )
             Model.objects.create(user=self.request.user, recipe=recipe)
             serializer = ShortRecipeSerializer(recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return delete_if_exists(filtered_recipes, delete_bad_request_text)
+        return Response({delete_bad_request_text}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(methods=['post', 'delete'], detail=True)
     def favorite(self, request, pk):
@@ -179,6 +173,10 @@ class UserViewSet(DjoserUserViewSet):
             )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        return delete_if_exists(
-            subscription, 'Error massage: Такой подписки не существует!'
+        if subscription.exists():
+            subscription.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            {'Error massage': 'Такой подписки не существует!'},
+            status=status.HTTP_400_BAD_REQUEST
         )
