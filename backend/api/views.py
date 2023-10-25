@@ -64,19 +64,20 @@ class RecipeViewSet(viewsets.ModelViewSet):
             user=self.request.user,
             recipe=recipe
         )
-        if filtered_recipes.exists():
-            if self.request.method == 'POST':
+        exists = filtered_recipes.exists()
+        if self.request.method == 'POST':
+            if exists:
                 return Response(
                     {post_bad_request_text},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            filtered_recipes.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-
-        if self.request.method == 'POST':
             Model.objects.create(user=self.request.user, recipe=recipe)
             serializer = ShortRecipeSerializer(recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        if exists:
+            filtered_recipes.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(
             {delete_bad_request_text},
             status=status.HTTP_400_BAD_REQUEST
