@@ -13,7 +13,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 
-from api.filters import CustomRecipeFilter
+from api.filters import CustomRecipeFilter, CustomIngredientFilter
 from foodgram.models import (Cart, Favorite, Follow, Ingredient,
                              IngredientRecipe, Recipe, Tag)
 from .pagination import PageLimitPagination
@@ -59,7 +59,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
                                   Model,
                                   post_bad_request_text,
                                   delete_bad_request_text):
-        recipe = get_object_or_404(Recipe, id=pk)
+        try:
+            recipe = get_object_or_404(Recipe, id=pk)
+        except Exception:
+            return Response(
+                {'Похоже, такого рецепта не существует!'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         filtered_recipes = Model.objects.filter(
             user=self.request.user,
             recipe=recipe
@@ -134,7 +140,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
     permission_classes = (permissions.AllowAny,)
     pagination_class = None
-    filter_backends = (filters.SearchFilter,)
+    filter_backends = (CustomIngredientFilter,)
     search_fields = ('^name',)
 
 
@@ -169,6 +175,11 @@ class UserViewSet(DjoserUserViewSet):
         subscription = Follow.objects.filter(user=user, author=author)
 
         if self.request.method == 'POST':
+            if user == author:
+                return Response(
+                    {'Error massage': 'Нельзя подписаться на самого себя!'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             if subscription.exists():
                 return Response(
                     {'Error massage': 'Подписка уже существует!'},

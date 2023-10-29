@@ -1,6 +1,8 @@
 from django.contrib.auth.models import User
 from djoser.serializers import UserCreateSerializer, UserSerializer
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
+from rest_framework.validators import UniqueValidator
 
 from api.fields import Base64ImageField, Name2HexColor
 from api.utils import (
@@ -61,6 +63,15 @@ class AddIngredientSerializer(serializers.ModelSerializer):
         model = IngredientRecipe
         fields = ('id', 'name', 'measurement_unit', 'amount')
 
+    def validate_id(self, value):
+        try:
+            get_object_or_404(Ingredient, id=value)
+        except Exception:
+            raise serializers.ValidationError(
+                'Похоже, такого ингредиента не существует!'
+            )
+        return value
+
 
 class TagSerializer(serializers.ModelSerializer):
     color = Name2HexColor()
@@ -104,7 +115,8 @@ class RecipePostSerializer(serializers.ModelSerializer):
     author = CustomerUserSerializer(read_only=True)
     ingredients = AddIngredientSerializer(
         many=True,
-        source='ingredient_recipes'
+        source='ingredient_recipes',
+        allow_null=False
     )
     image = Base64ImageField(required=True, allow_null=False)
     is_favorited = serializers.SerializerMethodField(read_only=True)
@@ -119,6 +131,10 @@ class RecipePostSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         ingredients = data.get('ingredient_recipes')
+        if ingredients == []:
+            raise serializers.ValidationError(
+                'Поле Ингредиенты не должно быть пустым!'
+            )
         if ingredients:
             ingredients_list = []
             for element in ingredients:
@@ -127,6 +143,15 @@ class RecipePostSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError('Ингредиенты не уникальны!')
             return data
         return data
+
+    def validate_tags(self, value):
+        if value == []:
+            raise serializers.ValidationError(
+                'Поле Теги не должно быть пустым!'
+            )
+        if len(value) != len(set(value)):
+            raise serializers.ValidationError('Теги повторяются!')
+        return value
 
     def get_is_favorited(self, obj):
         return get_is_favorited(self, obj)
@@ -174,14 +199,21 @@ class RecipePostSerializer(serializers.ModelSerializer):
                 validated_data.pop('ingredient_recipes'),
                 instance
             )
+        else:
+            raise serializers.ValidationError('Ингредиенты не указаны!')
         if validated_data.get('tags'):
             instance.tags.clear()
             self.insert_tags(validated_data.pop('tags'), instance)
+        else:
+            raise serializers.ValidationError('Теги не указаны!')
         return super().update(instance, validated_data)
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):
-    email = serializers.EmailField(allow_blank=False)
+    email = serializers.EmailField(
+        allow_blank=False,
+        validators=[UniqueValidator(queryset=User.objects.all())]
+    )
     first_name = serializers.CharField(max_length=150, allow_blank=False)
     last_name = serializers.CharField(max_length=150, allow_blank=False)
 

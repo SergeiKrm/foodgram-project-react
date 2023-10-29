@@ -1,6 +1,7 @@
 from django_filters.rest_framework import (
     BooleanFilter, FilterSet, ModelMultipleChoiceFilter
 )
+from rest_framework.filters import SearchFilter
 
 from foodgram.models import Recipe, Tag
 
@@ -31,3 +32,7 @@ class CustomRecipeFilter(FilterSet):
     class Meta:
         model = Recipe
         fields = ('author', 'tags', 'is_favorited', 'is_in_shopping_cart',)
+
+
+class CustomIngredientFilter(SearchFilter):
+    search_param = 'name'
