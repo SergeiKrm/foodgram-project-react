@@ -51,4 +51,3 @@ jobs:
           context: ./backend/
           push: true
           tags: sergeikrm/foodgram_backend:latest
-
