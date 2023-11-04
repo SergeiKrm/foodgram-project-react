@@ -8,11 +8,11 @@ load_dotenv()
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-SECRET_KEY = '@n5i(d73p8lx((z=6uxv8%*bkav%09-b@)h$^gpkb91$jr3_9n'  # os.getenv('SECRET_KEY')
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 DEBUG = bool(os.getenv('DEBUG', False))
 
-ALLOWED_HOSTS = ['158.160.30.76', '127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['158.160.30.76', '127.0.0.1', 'localhost', 'hamann08.hopto.org']
 
 
 INSTALLED_APPS = [
@@ -134,3 +134,5 @@ DJOSER = {
 }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
+CSRF_TRUSTED_ORIGINS = ['https://hamann08.hopto.org']

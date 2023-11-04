@@ -12,9 +12,8 @@ DATA_FILE = 'ingredients.csv'
 
 class Command(BaseCommand):
     def import_movie_from_csv_file(self):
-        data_folder = os.path.join(f'{BASE_DIR}/data/')
-        print(data_folder, 'data_folder')
-
+        data_folder = os.path.join(f'{BASE_DIR}/app/')
+        print('!!!!', data_folder)
         with open(os.path.join(data_folder, DATA_FILE),
                   encoding='utf-8') as data_file:
             data = csv.reader(data_file)

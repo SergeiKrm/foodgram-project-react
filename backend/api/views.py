@@ -115,12 +115,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
             recipe__in_cart__user=request.user.id).values(
                 'ingredient__name', 'ingredient__measurement_unit').annotate(
                     total_amount=Sum('amount'))
-
         buffer = io.BytesIO()
         pdf = canvas.Canvas(buffer)
-        MyFontObject = ttfonts.TTFont('Arial', 'arial.ttf')
+        MyFontObject = ttfonts.TTFont('arial', 'arial.ttf')
         pdfmetrics.registerFont(MyFontObject)
-        pdf.setFont("Arial", 12)
+        pdf.setFont('arial', 12)
         pdf.drawString(200, 750, "Список покупок")
         x, y = 100, 725
         for element in ingredients:
