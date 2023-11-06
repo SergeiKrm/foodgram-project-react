@@ -42,7 +42,7 @@ python3 manage.py runserver
 ```
 docker compose -f docker-compose.production.yml up
 ```
-Перейдите на страницу https://foodgram-sk.hopto.org/
+Перейдите на страницу https://hamann08.hopto.org/
 
 Используемые переменные окружения c указанием требуемого формата перечислены в файле ".env.example".
 
