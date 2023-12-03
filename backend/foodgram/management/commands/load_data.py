@@ -3,7 +3,7 @@ import os
 
 from django.core.management.base import BaseCommand
 
-from foodgram.models import Ingredient
+from foodgram.models import Ingredient, Tag
 
 
 BASE_DIR = os.path.dirname(os.getcwd())
@@ -11,7 +11,7 @@ DATA_FILE = 'ingredients.csv'
 
 
 class Command(BaseCommand):
-    def import_movie_from_csv_file(self):
+    def import_from_csv_file(self):
         data_folder = os.path.join(f'{BASE_DIR}/app/')
         print('!!!!', data_folder)
         with open(os.path.join(data_folder, DATA_FILE),
@@ -36,8 +36,18 @@ class Command(BaseCommand):
                            " ингредиента: {}\n{}".format(name, str(ex)))
                     print(msg)
 
+        Tag.objects.get_or_create(name='Завтрак',
+                                  slug='breakfast',
+                                  color='#ADFF2F')
+        Tag.objects.get_or_create(name='Обед',
+                                  slug='dinner',
+                                  color='#6A5ACD')
+        Tag.objects.get_or_create(name='Ужин',
+                                  slug='supper',
+                                  color='#800000')
+
     def handle(self, *args, **options):
         """
         Вызывает функцию импорта данных из csv
         """
-        self.import_movie_from_csv_file()
+        self.import_from_csv_file()
