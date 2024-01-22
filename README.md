@@ -53,10 +53,6 @@ python manage.py load_data
 Готово!
 
 
-Ознакомиться с версией приложения на сервере можно 
-перейдя на страницу https://hamann08.hopto.org/
-
-
 
 В приложении использовались технологии JavaScript, Python/Django.
 
